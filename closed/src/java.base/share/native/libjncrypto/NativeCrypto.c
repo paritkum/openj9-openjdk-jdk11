@@ -1018,7 +1018,7 @@ JNIEXPORT jint JNICALL Java_jdk_crypto_jniprovider_NativeCrypto_DigestComputeAnd
     unsigned char* messageNative = NULL;
     unsigned char* digestNative = NULL;
 
-    if ((NULL == context) || (NULL == context->ctx) || (NULL == context->cachedInitializedDigestContext))
+    if ((NULL == context) || (NULL == context->ctx) || (NULL == context->cachedInitializedDigestContext)){
 	return -1;
     }
 
