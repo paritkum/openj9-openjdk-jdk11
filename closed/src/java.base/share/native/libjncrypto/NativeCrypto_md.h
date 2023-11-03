@@ -27,8 +27,8 @@
 
 #include <jni.h>
 
-void * load_crypto_library(jboolean traceEnabled);
-void   unload_crypto_library(void *handle);
-void * find_crypto_symbol(void *handle, const char *symname);
+void * load_crypto_library_defunct(jboolean traceEnabled);
+void   unload_crypto_library_defunct(void *handle);
+void * find_crypto_symbol_defunct(void *handle, const char *symname);
 
 #endif /* NATIVECRYPTO_MD_H */

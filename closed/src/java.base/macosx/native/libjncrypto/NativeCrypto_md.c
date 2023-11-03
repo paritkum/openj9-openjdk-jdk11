@@ -30,7 +30,7 @@
 #include "NativeCrypto_md.h"
 
 /* Load the crypto library (return NULL on error) */
-void * load_crypto_library(jboolean traceEnabled) {
+void * load_crypto_library_defunct(jboolean traceEnabled) {
     void * result = NULL;
 
     const char *libname3 = "libcrypto.3.dylib";
@@ -53,11 +53,11 @@ void * load_crypto_library(jboolean traceEnabled) {
 }
 
 /* Unload the crypto library */
-void unload_crypto_library(void *handle) {
+void unload_crypto_library_defunct(void *handle) {
     (void)dlclose(handle);
 }
 
 /* Find the symbol in the crypto library (return NULL if not found) */
-void * find_crypto_symbol(void *handle, const char *symname) {
+void * find_crypto_symbol_defunct(void *handle, const char *symname) {
     return  dlsym(handle, symname);
 }
