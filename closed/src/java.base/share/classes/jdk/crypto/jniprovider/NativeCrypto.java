@@ -88,14 +88,20 @@ public class NativeCrypto {
         long osslVersion;
 
         try {
+            // Initialize null string before passing it to JNI
+            if (nativeLibName==null){
+                nativeLibName="";
+              }
+
             // load jncrypto JNI library
             System.loadLibrary("jncrypto");
+            
             // load OpenSSL crypto library dynamically
             osslVersion = loadCrypto(traceEnabled, nativeLibName, javaHome);
             if (traceEnabled && (osslVersion != -1)) {
                 System.err.println("Native crypto library load succeeded - using native crypto library.");
             } else {
-                if(nativeLibName != null && !nativeLibName.isEmpty()){
+                if(!nativeLibName.isEmpty()){
                     throw new RuntimeException(nativeLibName +"is not available, Crypto libraries are not loaded.");
                 }
             }

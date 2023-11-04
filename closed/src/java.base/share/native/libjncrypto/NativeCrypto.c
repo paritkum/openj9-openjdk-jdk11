@@ -509,12 +509,9 @@ jlong get_crypto_library_version(jboolean traceEnabled, void *handle) {
 
 
 void * load_crypto_library_libname(jboolean traceEnabled, const char *libNameProp) {
-
+ 
     void * result = NULL;
-
-    // Load the library defined by jdk.nativeCrypto.libName Java property
-    // Fall back to Java if library is not available.
-    if ((libNameProp != NULL) && (libNameProp[0] == '\0')) {
+    if ((libNameProp != NULL) && strcmp(libNameProp, "")) {
 	    #if defined(_AIX)
 		    int flags = RTLD_NOW;
 		    if (NULL != strrchr(libNameProp, '('))
@@ -530,88 +527,13 @@ void * load_crypto_library_libname(jboolean traceEnabled, const char *libNamePro
 }
 
 /* Load the crypto library (return NULL on error) */
-void * load_crypto_library(jboolean traceEnabled, const char * const *libNames) {
+void * load_crypto_library(jboolean traceEnabled, const char *chomepath) {
 
     void * result = NULL;
     void * prevResult = NULL;
     size_t i = 0;
     long tempVersion = 0;
     long previousVersion=0;
-
-    // Load the libraries in the order set out above, and retain the latest library
-    // Prefer the named version of the native library.
-    for (i = 0; i < sizeof(libNames) / sizeof(libNames[0]); i++) {
-        fprintf(stdout, "Attempting to load libname : %s\n", libNames[i]);
-
-        // Check to see if we can load the library
-        #if defined(_AIX)
-        int flags = RTLD_NOW;
-            if (NULL != strrchr(libNames[i], '('))
-                flags |= RTLD_MEMBER;
-            result = dlopen (libNames[i],  flags);
-        #elif defined (_WIN32)
-            result = LoadLibrary(libNames[i]);
-        #else
-            result = dlopen (libNames[i],  RTLD_NOW);
-        #endif
-
-        if (!result){
-            result = prevResult;
-            continue;
-        }
-
-    // Identify and load the latest version from the available libraries.
-    // This logic depends upon the order in which libnames are defined.
-    // It only loads the libraries which can possibly be the latest versions.
-        tempVersion = get_crypto_library_version(traceEnabled,result);
-
-        if ( previousVersion == 0){
-            previousVersion = tempVersion;
-            prevResult = result;
-        } else if (tempVersion > previousVersion) {
-            unload_crypto_library(prevResult);
-            return result;
-        } else if (tempVersion == previousVersion) {
-            unload_crypto_library(result);
-            return prevResult;
-        } else {
-             unload_crypto_library(result);
-             result = prevResult;
-        }
-    }
-    return result;
-}
-
-
-/*
- * Class:     jdk_crypto_jniprovider_NativeCrypto
- * Method:    loadCrypto
- * Signature: (Z)J
- */
-JNIEXPORT jlong JNICALL Java_jdk_crypto_jniprovider_NativeCrypto_loadCrypto
-  (JNIEnv *env, jclass thisObj, jboolean traceEnabled, jstring jlibname, jstring jhomepath)
-{
-
-    char *error;
-    const char *clibname="";
-    const char *chomepath="";
-    jlong ossl_ver = 0;
-
-    if (jlibname != NULL) {
-        clibname = (*env)->GetStringUTFChars( env, jlibname, NULL ) ;
-        if ((clibname != NULL) && (clibname[0] == '\0')) {
-            if (traceEnabled) {
-                fprintf(stdout, "jdk.nativeCrypto.libName property is not set\n");
-                fflush(stdout);
-            }
-        } else {
-            crypto_library = load_crypto_library_libname(traceEnabled, (const char *)clibname);
-        }
-    }
-
-    if (jhomepath != NULL) {
-        chomepath = (*env)->GetStringUTFChars( env, jhomepath, NULL ) ;
-    }
 
     // Library names for OpenSSL 1.1.1, 1.1.0 and symbolic links
     // It is important to preserve the order!!!
@@ -633,42 +555,140 @@ JNIEXPORT jlong JNICALL Java_jdk_crypto_jniprovider_NativeCrypto_loadCrypto
         "libcrypto-1_1-x64.dll",            // 1.1.x library name
         "libeay32.dll",                     // old library name
         #else
-        "libcrypto.so",                     // general symlink library name
         "libcrypto.so.3",                   // 3.x library name
         "libcrypto.so.1.1",                 // 1.1.x library name
         "libcrypto.so.1.0.0",               // 1.0.x library name
+        "libcrypto.so",                     // general symlink library name
         "libcrypto.so.10",                  // old library name
         #endif
     };
 
+
     size_t size = (sizeof(libNames) / sizeof(libNames[0]));
-    if (!(chomepath[0] == '\0')) {
+    if ((chomepath != NULL) && strcmp(chomepath, "") && (NULL == crypto_library)) {
         char **libNamesWithPath = malloc(size * sizeof(char *));
 
         for (int i = 0; i < size; i++) {
             size_t path_len = strlen(chomepath);
             size_t file_len = strlen(libNames[i]);
             // Allocate memory for the new file name with the path
-            libNamesWithPath[i] = malloc((path_len + file_len + 2) * sizeof(char));
+            libNamesWithPath[i] = malloc((path_len + file_len + 16) * sizeof(char));
 
             strcpy(libNamesWithPath[i], chomepath);
             // Append a slash or backslash depending on the operating system
             #if defined(_WIN32)
-            strcat(libNamesWithPath[i], "\\");
+            strcat(libNamesWithPath[i], "\\bin\\");
             #else
-            strcat(libNamesWithPath[i], "/");
+            strcat(libNamesWithPath[i], "/lib/");
             #endif
             strcat(libNamesWithPath[i], libNames[i]);
-        }
+
             // Load OpenSSL Crypto library bundled with JDK
-            crypto_library = load_crypto_library(traceEnabled, (const char **)libNamesWithPath);
+            result = load_crypto_library_libname(traceEnabled, (const char *)libNamesWithPath[i]);
+
+            if (!result){
+                result = prevResult;
+                continue;
+            }
+
+            // Identify and load the latest version from the available libraries.
+            // This logic depends upon the order in which libnames are defined.
+            tempVersion = get_crypto_library_version(traceEnabled,result);
+
+            if (tempVersion ==0)
+                continue;
+            if (previousVersion == 0){
+                previousVersion = tempVersion;
+                prevResult = result;
+            } else if (tempVersion > previousVersion) {
+                unload_crypto_library(prevResult);
+                return result;
+            } else {
+                unload_crypto_library(result);
+                result = prevResult;
+            }
+            
+        }
+        if (result != NULL){
+            return result;
+        }
+
     }
 
 
-    // crypto library couldn't be loaded from libname or java.home
+    // The attempt to load from property and Bundle JDK failed. 
+    // Load the libraries in the order set out above, and retain the latest library
+    // Prefer the named version of the native library.
+    
+
+    for (i = 0; i < sizeof(libNames) / sizeof(libNames[0]); i++) {
+        fprintf(stdout, "Attempting to load libname from OS : %s\n", libNames[i]);
+
+        result = load_crypto_library_libname(traceEnabled, (const char *)libNames[i]);
+
+        if (!result){
+            result = prevResult;
+            continue;
+        }
+
+        // Identify and load the latest version from the available libraries.
+        // This logic depends upon the order in which libnames are defined.
+        // It only loads the libraries which can possibly be the latest versions.
+
+        tempVersion = get_crypto_library_version(traceEnabled,result);
+
+        if (previousVersion == 0){
+            previousVersion = tempVersion;
+            prevResult = result;
+        } else if (tempVersion > previousVersion) {
+            unload_crypto_library(prevResult);
+            return result;
+        } else {
+             unload_crypto_library(result);
+             result = prevResult;
+        }
+        
+    }
+    return result;
+}
+
+
+
+
+JNIEXPORT jlong JNICALL Java_HelloJNI_loadCrypto
+  (JNIEnv * env, jobject jobj, jboolean traceEnabled, jstring jlibname, jstring jhomepath) {
+
+
+    char *error;
+    const char *clibname="";
+    const char *chomepath="";
+    jlong ossl_ver = 0;
+
+    if (jlibname != NULL) {
+        clibname = (*env)->GetStringUTFChars( env, jlibname, NULL ) ;
+        if ((clibname == NULL)) {
+            if (traceEnabled) {
+                fprintf(stdout, "jdk.nativeCrypto.libName property is not set\n");
+                fflush(stdout);
+            }
+        } else {
+            crypto_library = load_crypto_library_libname(traceEnabled, (const char *)clibname);
+            if (NULL == crypto_library)
+                    printf("crypto_library is null\n");
+
+        }
+    }
+
+    if (jhomepath != NULL) {
+        chomepath = (*env)->GetStringUTFChars( env, jhomepath, NULL ) ;
+    }
+
+    
+
+    // crypto library couldn't be loaded from Property or java.home
     // Load OpenSSL Crypto library from OS Library path
     if (NULL == crypto_library){
-        crypto_library = load_crypto_library(traceEnabled, libNames);
+        crypto_library = load_crypto_library(traceEnabled, chomepath);
     }
 
     (*env)->ReleaseStringUTFChars(env, jlibname, clibname);
