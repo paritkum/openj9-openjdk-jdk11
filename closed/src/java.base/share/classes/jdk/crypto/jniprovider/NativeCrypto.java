@@ -69,7 +69,7 @@ public class NativeCrypto {
     private static final boolean traceEnabled = Boolean.parseBoolean(
             GetPropertyAction.privilegedGetProperty("jdk.nativeCryptoTrace", "false"));
 
-    private static final String nativeLibName =
+    private static String nativeLibName =
 	    GetPropertyAction.privilegedGetProperty("jdk.nativeCrypto.libName");
 
     private static final String javaHome =
