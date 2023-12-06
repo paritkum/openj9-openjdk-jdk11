@@ -667,10 +667,13 @@ JNIEXPORT jlong JNICALL Java_jdk_crypto_jniprovider_NativeCrypto_loadCrypto
             }
         } else {
             crypto_library = load_crypto_library_libname(traceEnabled, (const char *)clibname);
-            if (NULL == crypto_library)
-                fprintf(stderr, "OpenSSL version specified in jdk.openssl.libName couldn't be loaded \n");
-                fflush(stderr);
-            return -1;
+            if (NULL == crypto_library) {
+                if (traceEnabled) {
+                    fprintf(stderr, "OpenSSL version specified in jdk.openssl.libName couldn't be loaded \n");
+                    fflush(stderr);
+                }
+                return -1;
+            }
         }
     }
 
