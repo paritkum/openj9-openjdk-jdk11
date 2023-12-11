@@ -51,8 +51,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jdk_crypto_jniprovider_NativeCrypto.h"
-
 #define OPENSSL_VERSION_CODE(major, minor, fix, patch) \
         ((((jlong)(major)) << 28) | ((minor) << 20) | ((fix) << 12) | (patch))
 
