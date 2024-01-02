@@ -77,7 +77,7 @@
 #endif /* defined(WINDOWS) */
 
 /* Header for NativeCrypto MD files */
-static void * load_crypto_library(jboolean traceEnabled);
+static void * load_crypto_library(jboolean traceEnabled, const char *chomepath);
 static void   unload_crypto_library(void *handle);
 static void * find_crypto_symbol(void *handle, const char *symname);
 
