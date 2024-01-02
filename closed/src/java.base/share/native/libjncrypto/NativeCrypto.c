@@ -77,9 +77,9 @@
 #endif /* defined(WINDOWS) */
 
 /* Header for NativeCrypto MD files */
-void * load_crypto_library(jboolean traceEnabled);
-void   unload_crypto_library(void *handle);
-void * find_crypto_symbol(void *handle, const char *symname);
+static void * load_crypto_library(jboolean traceEnabled);
+static void   unload_crypto_library(void *handle);
+static void * find_crypto_symbol(void *handle, const char *symname);
 
 
 /* Header for RSA algorithm using 1.0.2 OpenSSL. */
