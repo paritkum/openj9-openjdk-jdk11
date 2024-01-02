@@ -76,6 +76,12 @@
 # include <pthread.h>
 #endif /* defined(WINDOWS) */
 
+/* Header for NativeCrypto MD files */
+void * load_crypto_library(jboolean traceEnabled);
+void   unload_crypto_library(void *handle);
+void * find_crypto_symbol(void *handle, const char *symname);
+
+
 /* Header for RSA algorithm using 1.0.2 OpenSSL. */
 int OSSL102_RSA_set0_key(RSA *, BIGNUM *, BIGNUM *, BIGNUM *);
 int OSSL102_RSA_set0_factors(RSA *, BIGNUM *, BIGNUM *);
