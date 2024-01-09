@@ -666,7 +666,7 @@ JNIEXPORT jlong JNICALL Java_jdk_crypto_jniprovider_NativeCrypto_loadCrypto
 
     if (jlibname != NULL) {
         clibname = (*env)->GetStringUTFChars( env, jlibname, NULL ) ;
-        if ((clibname == NULL)) {
+        if (clibname == NULL) {
             if (traceEnabled) {
                 fprintf(stderr, "jdk.openssl.libName property is not set\n");
                 fflush(stderr);
