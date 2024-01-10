@@ -98,11 +98,12 @@ public class NativeCrypto {
 
             // load OpenSSL crypto library dynamically
             osslVersion = loadCrypto(traceEnabled, nativeLibName, javaHome);
-            if (traceEnabled && (osslVersion != -1)) {
+            if (osslVersion != -1) {
+		if (traceEnabled)
                 System.err.println("Native crypto library load succeeded - using native crypto library.");
             } else {
                 if(!nativeLibName.isEmpty()){
-                    throw new RuntimeException(nativeLibName +"is not available, Crypto libraries are not loaded.");
+                    throw new RuntimeException(nativeLibName +" is not available, Crypto libraries are not loaded.");
                 }
             }
         } catch (UnsatisfiedLinkError usle) {
