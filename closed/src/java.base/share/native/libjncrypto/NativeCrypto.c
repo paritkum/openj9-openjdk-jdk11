@@ -546,8 +546,10 @@ void * load_crypto_library(jboolean traceEnabled, const char *chomepath) {
     static const char * const libNames[] = {
 
         #if defined(_AIX)
-        "libcrypto.so.3",                   // 3.x library name
+        "libcrypto.a(libcrypto64.so.3)"     // 3.x library name from archive file
+        "libcrypto64.so.3"                  // 3.x library nam
         "libcrypto.a(libcrypto.so.3)",      // 3.x library name from archive file
+        "libcrypto.so.3",                   // 3.x library nam
         "libcrypto.a(libcrypto64.so.1.1)",  // 1.1.x library name from archive file
         "libcrypto.so.1.1",                 // 1.1.x library name
         "libcrypto.a(libcrypto64.so)",      // general symlink library name from archive file
@@ -556,15 +558,16 @@ void * load_crypto_library(jboolean traceEnabled, const char *chomepath) {
         "libcrypto.3.dylib",                // 3.x library name
         "libcrypto.1.1.dylib",              // 1.1.x library name
         "libcrypto.1.0.0.dylib",            // 1.0.x library name
+        //"libcrypto.dylib"                 Apple no longer supports loading symlink.
         #elif defined (_WIN32)
         "libcrypto-3-x64.dll",              // 3.x library name
         "libcrypto-1_1-x64.dll",            // 1.1.x library name
         "libeay32.dll",                     // old library name
         #else
+        "libcrypto.so",                     // general symlink library name
         "libcrypto.so.3",                   // 3.x library name
         "libcrypto.so.1.1",                 // 1.1.x library name
         "libcrypto.so.1.0.0",               // 1.0.x library name
-        "libcrypto.so",                     // general symlink library name
         "libcrypto.so.10",                  // old library name
         #endif
     };
@@ -599,25 +602,23 @@ void * load_crypto_library(jboolean traceEnabled, const char *chomepath) {
 
             // Identify and load the latest version from the available libraries.
             // This logic depends upon the order in which libnames are defined.
+            // Libraries are listed in descending order w.r.t version
+            // Once two libraries are loaded, the latest version can be identifie
             tempVersion = get_crypto_library_version(traceEnabled,result);
 
-            if (tempVersion ==0)
+            if (tempVersion == 0)
                 continue;
             if (previousVersion == 0){
                 previousVersion = tempVersion;
                 prevResult = result;
-            } else if (tempVersion > previousVersion) {
+            } else if (tempVersion >= previousVersion) {
                 unload_crypto_library(prevResult);
                 return result;
             } else {
                 unload_crypto_library(result);
-                result = prevResult;
+                return prevResult;
             }
         }
-        if (result != NULL){
-            return result;
-        }
-
     }
 
     // The attempt to load from property and Openssl bundled with JDK failed.
@@ -637,18 +638,19 @@ void * load_crypto_library(jboolean traceEnabled, const char *chomepath) {
         // Identify and load the latest version from the available libraries.
         // This logic depends upon the order in which libnames are defined.
         // It only loads the libraries which can possibly be the latest versions.
-
         tempVersion = get_crypto_library_version(traceEnabled,result);
 
+        if (tempVersion == 0)
+            continue;
         if (previousVersion == 0){
             previousVersion = tempVersion;
             prevResult = result;
-        } else if (tempVersion > previousVersion) {
+        } else if (tempVersion >= previousVersion) {
             unload_crypto_library(prevResult);
             return result;
         } else {
-             unload_crypto_library(result);
-             result = prevResult;
+            unload_crypto_library(result);
+            return prevResult;
         }
     }
     return result;
