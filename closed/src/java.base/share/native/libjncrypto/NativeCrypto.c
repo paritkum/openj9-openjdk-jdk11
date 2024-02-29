@@ -619,6 +619,9 @@ void * load_crypto_library(jboolean traceEnabled, const char *chomepath) {
                 return prevResult;
             }
         }
+        if (result != NULL){
+            return result;
+        }
     }
 
     // The attempt to load from property and Openssl bundled with JDK failed.
