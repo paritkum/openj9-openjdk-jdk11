@@ -410,9 +410,11 @@ void log_crypto_library_path(jboolean traceEnabled, void *crypto_library) {
         char* path = cur_info->ldinfo_filename;
         char* member_name = path
             + strlen(cur_info->ldinfo_filename) + 1;
-        if ((*member_name != '\0') && (strstr(path, "libcrypt") != NULL)) {
+        if ((*member_name != '\0') && (strstr(path, "libcrypto") != NULL)) {
             fprintf(stdout, "OpenSSL was loaded from - %s(%s)\n", path, member_name);
             fflush(stdout);
+	    free(buffer);
+	    return;
         }
         buf += cur_info->ldinfo_next;
         } while (cur_info->ldinfo_next != 0);
