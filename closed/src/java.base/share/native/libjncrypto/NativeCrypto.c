@@ -431,6 +431,7 @@ void log_crypto_library_path(jboolean traceEnabled, void *crypto_library) {
         if (crypto_library == probe_handle) {
             fprintf(stdout, "OpenSSL was loaded from - %s\n", image_name);
             fflush(stdout);
+	    return;
         }
     }
     #elif defined (_WIN32)
