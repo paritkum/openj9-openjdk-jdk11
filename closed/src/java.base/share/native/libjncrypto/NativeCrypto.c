@@ -549,8 +549,8 @@ void * load_crypto_library(jboolean traceEnabled, const char *chomepath) {
     static const char * const libNames[] = {
 
         #if defined(_AIX)
-        "libcrypto.a(libcrypto64.so.3)"     // 3.x library name from archive file
-        "libcrypto64.so.3"                  // 3.x library nam
+        "libcrypto.a(libcrypto64.so.3)",    // 3.x library name from archive file
+        "libcrypto64.so.3",                 // 3.x library nam
         "libcrypto.a(libcrypto.so.3)",      // 3.x library name from archive file
         "libcrypto.so.3",                   // 3.x library nam
         "libcrypto.a(libcrypto64.so.1.1)",  // 1.1.x library name from archive file
