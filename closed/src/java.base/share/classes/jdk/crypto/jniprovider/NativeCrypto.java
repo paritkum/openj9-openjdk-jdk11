@@ -69,6 +69,12 @@ public class NativeCrypto {
     private static final boolean traceEnabled = Boolean.parseBoolean(
             GetPropertyAction.privilegedGetProperty("jdk.nativeCryptoTrace", "false"));
 
+    private static String nativeLibName =
+	    GetPropertyAction.privilegedGetProperty("jdk.openssl.libName");
+
+    private static final String javaHome =
+	    GetPropertyAction.privilegedGetProperty("java.home");
+
     private static final class InstanceHolder {
         private static final NativeCrypto instance = new NativeCrypto();
     }
@@ -82,12 +88,23 @@ public class NativeCrypto {
         long osslVersion;
 
         try {
+            // Initialize null string before passing it to JNI
+            if (nativeLibName==null){
+                nativeLibName="";
+              }
+
             // load jncrypto JNI library
             System.loadLibrary("jncrypto");
+
             // load OpenSSL crypto library dynamically
-            osslVersion = loadCrypto(traceEnabled);
-            if (traceEnabled && (osslVersion != -1)) {
+            osslVersion = loadCrypto(traceEnabled, nativeLibName, javaHome);
+            if (osslVersion != -1) {
+		if (traceEnabled)
                 System.err.println("Native crypto library load succeeded - using native crypto library.");
+            } else {
+                if(!nativeLibName.isEmpty()){
+                    throw new RuntimeException(nativeLibName +" is not available, Crypto libraries are not loaded.");
+                }
             }
         } catch (UnsatisfiedLinkError usle) {
             if (traceEnabled) {
@@ -199,7 +216,9 @@ public class NativeCrypto {
 
     /* Native digest interfaces */
 
-    private static final native long loadCrypto(boolean trace);
+    private static final native long loadCrypto(boolean trace,
+                                                String libname,
+                                                String javaHome);
 
     public final native long DigestCreateContext(long nativeBuffer,
                                                  int algoIndex);
